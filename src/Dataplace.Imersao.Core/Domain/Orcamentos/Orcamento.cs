@@ -74,6 +74,20 @@ namespace Dataplace.Imersao.Core.Domain.Orcamentos
 
         }
 
+        public OrcamentoItem RemoverItem(OrcamentoProduto produto, decimal quantidade, OrcamentoItemPreco preco)
+        {
+
+            var item = new OrcamentoItem(this.CdEmpresa, this.CdFilial, this.NumOrcamento, produto, quantidade, preco);
+            if (!produto.IsValid())
+                return default;
+
+
+
+            this.Itens.Remove(item);
+            return item;
+
+        }
+
         public void FecharOrcamento()
         {
             if (Situacao == OrcamentoStatusEnum.Cancelado)

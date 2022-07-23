@@ -66,13 +66,6 @@ namespace Dataplace.Imersao.Core.Infra.Data.Repositories
 
 
 
-
-
-
-
-
-
-
             var sql = @"
             INSERT INTO 
                OrcamentoItem(CdEmpresa, CdFilial, NumOrcamento, qtdproduto, stitem, tpregistro, cdproduto, vlvenda, percaltpreco, vlcalculado)

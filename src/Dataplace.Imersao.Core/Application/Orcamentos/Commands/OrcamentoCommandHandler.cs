@@ -14,11 +14,14 @@ using System.Threading.Tasks;
 
 namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
 {
-    public class OrcamentoCommandHandler: 
-         CommandHandler,
+    public class OrcamentoCommandHandler: CommandHandler,
          IRequestHandler<AdicionarOrcamentoCommand, bool>,
          IRequestHandler<FecharOrcamentoCommand, bool>,
-         IRequestHandler<AdicionarOrcamentoItemCommand, bool>
+         IRequestHandler<AdicionarOrcamentoItemCommand, bool>,
+         IRequestHandler<ExcluirOrcamentoItemCommand, bool>,
+         IRequestHandler<ReabirOrcamentoCommand, bool>,
+         IRequestHandler<CancelarOrcamentoCommand, bool>
+         
     {
         #region fields
         private Domain.Orcamentos.Repositories.IOrcamentoRepository _orcamentoRepository;
@@ -93,7 +96,7 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
                 return false;
             }
 
-            orcamento.FecharOrcamento();
+            orcamento.ReabrirOrcamento();
             if (!_orcamentoRepository.AtualizarOrcamento(orcamento))
             {
                 NotifyErrorValidation("orcamento", "Ocoreu um problema com a persistência dos dados");
@@ -101,10 +104,62 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
             }
    
 
-            AddEvent(new Orcamentos.Events.OrcamentoFechadoEvent(request.NumOcamento));
+            AddEvent(new Orcamentos.Events.OrcamentoReabertoEvent(request.NumOcamento));
             return Commit(transactionId);
         }
         #endregion
+
+        public async Task<bool> Handle(ReabirOrcamentoCommand request, CancellationToken cancellationToken)
+        {
+            var transactionId = BeginTransaction();
+            var cdEmpresa = dpLibrary05.mGenerico.SymPRM.cdempresa;
+            var cdFilial = dpLibrary05.mGenerico.SymPRM.cdfilial;
+
+            var orcamento = _orcamentoRepository.ObterOrcamento(cdEmpresa, cdFilial, request.NumOcamento);
+            if (orcamento == null)
+            {
+                NotifyErrorValidation("notFound", "orçamento não encotrado");
+                return false;
+            }
+
+            orcamento.FecharOrcamento();
+            if (!_orcamentoRepository.AtualizarOrcamento(orcamento))
+            {
+                NotifyErrorValidation("orcamento", "Ocoreu um problema com a persistência dos dados");
+                return false;
+            }
+
+
+            AddEvent(new Orcamentos.Events.OrcamentoFechadoEvent(request.NumOcamento));
+            return Commit(transactionId);
+        }
+
+
+        public async Task<bool> Handle(CancelarOrcamentoCommand request, CancellationToken cancellationToken)
+        {
+            var transactionId = BeginTransaction();
+            var cdEmpresa = dpLibrary05.mGenerico.SymPRM.cdempresa;
+            var cdFilial = dpLibrary05.mGenerico.SymPRM.cdfilial;
+
+            var orcamento = _orcamentoRepository.ObterOrcamento(cdEmpresa, cdFilial, request.NumOcamento);
+            if (orcamento == null)
+            {
+                NotifyErrorValidation("notFound", "orçamento não encotrado");
+                return false;
+            }
+
+            orcamento.CancelarOrcamento();
+            if (!_orcamentoRepository.AtualizarOrcamento(orcamento))
+            {
+                NotifyErrorValidation("orcamento", "Ocoreu um problema com a persistência dos dados");
+                return false;
+            }
+
+
+            AddEvent(new Orcamentos.Events.OrcamentoCanceladoEvent(request.NumOcamento));
+            return Commit(transactionId);
+        }
+
 
         #region itens
         public async Task<bool> Handle(AdicionarOrcamentoItemCommand request, CancellationToken cancellationToken)
@@ -147,7 +202,7 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
             var item = orcamento.AdicionarItem(produto, quantidade, preco);
 
 
-            var itemAdicionado = _orcamentoItemRepository.AdicionarItem(item); itemAdicionado
+            var itemAdicionado = _orcamentoItemRepository.AdicionarItem(item);
 
             if (itemAdicionado == null)
                 NotifyErrorValidation("database", "Ocoreu um problema com a persistência dos dados");
@@ -159,6 +214,58 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
             return Commit(transactionId);
         }
         #endregion
+
+        public async Task<bool> Handle(ExcluirOrcamentoItemCommand request, CancellationToken cancellationToken)
+        {
+            var transactionId = BeginTransaction();
+
+
+            var orcamento = _orcamentoRepository.ObterOrcamento(request.Item.CdEmpresa, request.Item.CdFilial, request.Item.NumOrcamento);
+            if (orcamento == null)
+            {
+                NotifyErrorValidation("notFound", "Orçamento não encontrado");
+                return false;
+            }
+
+            if (orcamento.PermiteAlteracaoItem())
+            {
+                orcamento.Validation.Notifications.ToList().ForEach(val => NotifyErrorValidation(val.Property, val.Message));
+                return false;
+            }
+
+            var tpRegistro = request.Item.TpRegistro.ToTpRegistroEnum();
+            var produto = !string.IsNullOrEmpty((request.Item.CdProduto ?? "").Trim()) && tpRegistro.HasValue ?
+                new OrcamentoProduto(tpRegistro.Value, request.Item.CdProduto) : default;
+            if (produto == null)
+            {
+                NotifyErrorValidation("notFound", "Dados do produto inválido");
+                return false;
+            }
+
+
+            var quantidade = request.Item.Quantidade;
+            // cross aggreagate service
+            var preco = _orcamentoService.ObterProdutoPreco(orcamento, produto);
+            if (preco == null)
+            {
+                NotifyErrorValidation("notFound", "Dados do preço inválido");
+                return false;
+            }
+
+            var item = orcamento.RemoverItem(produto, quantidade, preco);
+
+
+            var itemRemovido = _orcamentoItemRepository.ExcluirItem(item);
+
+            if (itemRemovido == null)
+                NotifyErrorValidation("database", "Ocoreu um problema com a persistência dos dados");
+            request.Item.Seq = itemRemovido.CompareTo(item);
+
+
+            new OrcamentoItemExcluidoEvent(request.Item);
+
+            return Commit(transactionId);
+        }
 
         #region internals
         public OrcamentoCliente ObterClientePadrao()
