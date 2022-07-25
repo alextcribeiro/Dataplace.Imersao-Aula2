@@ -88,6 +88,20 @@ namespace Dataplace.Imersao.Core.Domain.Orcamentos
 
         }
 
+        public OrcamentoItem AtualizaItem(OrcamentoProduto produto, decimal quantidade, OrcamentoItemPreco preco)
+        {
+
+            var item = new OrcamentoItem(this.CdEmpresa, this.CdFilial, this.NumOrcamento, produto, quantidade, preco);
+            if (!produto.IsValid())
+                return default;
+
+
+
+            //this.Itens.Equals(item);
+            return item;
+
+        }
+
         public void FecharOrcamento()
         {
             if (Situacao == OrcamentoStatusEnum.Cancelado)
@@ -129,10 +143,31 @@ namespace Dataplace.Imersao.Core.Domain.Orcamentos
             if (Situacao == OrcamentoStatusEnum.Cancelado)
                 throw new DomainException("Orçamento já está Cancelado!");
 
+
             Situacao = OrcamentoStatusEnum.Cancelado;
             foreach (var item in Itens ?? new List<OrcamentoItem>())
             {
                 item.DefinirStiaucao(OrcamentoItemStatusEnum.Cancelado);
+            }
+            DtFechamento = null;
+        }
+
+        public void AtualizarOrcamento()
+        {
+
+            if (Situacao == OrcamentoStatusEnum.Cancelado)
+                throw new DomainException("Não é permitido atualizar orçamento cancelado!");
+
+            if (Situacao == OrcamentoStatusEnum.Fechado)
+                throw new DomainException("Não é permitido Atualizar orçamento Fechado!");
+
+            if (Situacao == OrcamentoStatusEnum.Aberto)
+                throw new DomainException("Orçamento já está Aberto!");
+
+            Situacao = OrcamentoStatusEnum.Aberto;
+            foreach (var item in Itens ?? new List<OrcamentoItem>())
+            {
+                item.DefinirStiaucao(OrcamentoItemStatusEnum.Aberto);
             }
             DtFechamento = null;
         }
