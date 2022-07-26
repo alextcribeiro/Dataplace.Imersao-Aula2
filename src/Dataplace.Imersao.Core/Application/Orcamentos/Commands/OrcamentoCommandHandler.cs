@@ -22,7 +22,8 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
          IRequestHandler<AtualizarOrcamentoItemCommand, bool>,
          IRequestHandler<ReabirOrcamentoCommand, bool>,
          IRequestHandler<CancelarOrcamentoCommand, bool>,
-         IRequestHandler<AtualizarOrcamentoCommand, bool>
+         IRequestHandler<AtualizarOrcamentoCommand, bool>,
+         IRequestHandler<ExcluirOrcamentoCommand, bool>
          
     {
         #region fields
@@ -162,6 +163,32 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
             return Commit(transactionId);
         }
 
+
+        public async Task<bool> Handle(ExcluirOrcamentoCommand request, CancellationToken cancellationToken)
+        {
+            var transactionId = BeginTransaction();
+            var cdEmpresa = dpLibrary05.mGenerico.SymPRM.cdempresa;
+            var cdFilial = dpLibrary05.mGenerico.SymPRM.cdfilial;
+
+            var orcamento = _orcamentoRepository.ObterOrcamento(cdEmpresa, cdFilial, request.NumOcamento);
+            if (orcamento == null)
+            {
+                NotifyErrorValidation("notFound", "orçamento não encotrado");
+                return false;
+            }
+
+            
+            if (!_orcamentoRepository.ExcluirOrcamento(orcamento))
+            {
+                NotifyErrorValidation("orcamento", "Ocoreu um problema com a persistência dos dados");
+                return false;
+            }
+
+
+            AddEvent(new Orcamentos.Events.OrcamentoExcluidoEvent(request.NumOcamento));
+            return Commit(transactionId);
+        }
+
         public async Task<bool> Handle(AtualizarOrcamentoCommand request, CancellationToken cancellationToken)
         {
             var transactionId = BeginTransaction();
@@ -175,7 +202,7 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Commands
                 return false;
             }
 
-            orcamento.AtualizarOrcamento();
+            
             if (!_orcamentoRepository.AtualizarOrcamento(orcamento))
             {
                 NotifyErrorValidation("orcamento", "Ocoreu um problema com a persistência dos dados");

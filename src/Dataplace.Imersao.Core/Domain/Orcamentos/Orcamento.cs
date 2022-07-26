@@ -152,25 +152,7 @@ namespace Dataplace.Imersao.Core.Domain.Orcamentos
             DtFechamento = null;
         }
 
-        public void AtualizarOrcamento()
-        {
-
-            if (Situacao == OrcamentoStatusEnum.Cancelado)
-                throw new DomainException("Não é permitido atualizar orçamento cancelado!");
-
-            if (Situacao == OrcamentoStatusEnum.Fechado)
-                throw new DomainException("Não é permitido Atualizar orçamento Fechado!");
-
-            if (Situacao == OrcamentoStatusEnum.Aberto)
-                throw new DomainException("Orçamento já está Aberto!");
-
-            Situacao = OrcamentoStatusEnum.Aberto;
-            foreach (var item in Itens ?? new List<OrcamentoItem>())
-            {
-                item.DefinirStiaucao(OrcamentoItemStatusEnum.Aberto);
-            }
-            DtFechamento = null;
-        }
+      
 
         #endregion
 

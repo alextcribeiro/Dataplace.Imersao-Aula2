@@ -83,12 +83,14 @@
     <Compile Include="Application\Orcamentos\Commands\AtualizarOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\AtualizarOrcamentoItemCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\CancelarOrcamentoCommand.cs" />
+    <Compile Include="Application\Orcamentos\Commands\ExcluirOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\ExcluirOrcamentoItemCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\FecharOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Commands\OrcamentoCommandHandler.cs" />
     <Compile Include="Application\Orcamentos\Commands\ReabirOrcamentoCommand.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoAtualizadoEvent.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoCanceladoEvent.cs" />
+    <Compile Include="Application\Orcamentos\Events\OrcamentoExcluidoEvent.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoItemAdicionadoEvent.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoAdicionadoEvent.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoFechadoEvent.cs" />
