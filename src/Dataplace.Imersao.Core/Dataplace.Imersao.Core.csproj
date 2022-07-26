@@ -99,6 +99,8 @@
     <Compile Include="Application\Orcamentos\Events\OrcamentoItemExcluidoEvent.cs" />
     <Compile Include="Application\Orcamentos\Events\OrcamentoReabertoEvent.cs" />
     <Compile Include="Application\Orcamentos\Queries\ObterOcamentoQuery.cs" />
+    <Compile Include="Application\Orcamentos\Queries\ObterOrcamentoItemQuery.cs" />
+    <Compile Include="Application\Orcamentos\Queries\OrcamentoItemQueryHandler.cs" />
     <Compile Include="Application\Orcamentos\Queries\OrcamentoQueryHandler.cs" />
     <Compile Include="Application\Orcamentos\ViewModels\OrcamentoItemViewModel.cs" />
     <Compile Include="Application\Orcamentos\ViewModels\OrcamentoViewModel.cs" />
