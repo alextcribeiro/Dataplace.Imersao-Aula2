@@ -31,7 +31,6 @@ namespace Dataplace.Imersao.Core.Application.Orcamentos.Queries
             OrcamentoItem.CdProduto,
             OrcamentoItem.DsProduto,
             OrcamentoItem.Quantidade,
-            OrcamentoItem.PrecoTabela,
             OrcamentoItem.PercAltPreco,
             OrcamentoItem.PrecoVenda,
             OrcamentoItem.Total,
